@@ -1,115 +1,68 @@
-import { View, TouchableOpacity } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  ScrollView,
+  Keyboard,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import { Button, Div, Icon, Image, Input, Text } from "react-native-magnus";
 import Header from "../components/FileEdit/Header";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import Slider from "@react-native-community/slider";
 import { manipulateAsync } from "expo-image-manipulator";
+import BottomCardSlider from "../components/FileEdit/BottomCardSlider";
+import BottomCardDimentions from "../components/FileEdit/BottomCardDimentions";
 
 const FileEdit = () => {
   const route = useRoute();
   const params = useNavigation();
+  const [showCompress, setShowCompress] = useState(true);
+
+  const [sliderValue, setSliderValue] = React.useState(50);
+  const [uri, setUri] = useState("t");
+  const rotateLeft = async () => {
+    const result = await manipulateAsync(uri, [{ rotate: -90 }]);
+    setUri(result.uri);
+  };
+
+  const rotateRight = async () => {
+    const result = await manipulateAsync(uri, [{ rotate: 90 }]);
+    setUri(result.uri);
+  };
   const [dimentions, setDimentions] = React.useState({
     width: 300,
     height: 300,
   });
-  const [sliderValue, setSliderValue] = React.useState(50);
-  const [uri, setUri] = useState("t");
   useEffect(() => {
+    Keyboard.addListener("keyboardWillShow", () => {
+      setShowCompress(false);
+    });
+    Keyboard.addListener("keyboardWillHide", () => {
+      setShowCompress(true);
+    });
     setUri(route.params?.uri);
     return () => {};
   }, [route.params]);
 
-  const resize = async () => {
-    try {
-      const res = await manipulateAsync(
-        uri,
-        [{ resize: { width: dimentions.width, height: dimentions.height } }],
-        { compress: 1 }
-      );
-      setUri(res.uri);
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
   return (
-    <Div flex={1}>
-      <Header file={uri} />
+    <KeyboardAvoidingView enabled behavior="padding" style={{ flex: 1 }}>
+      <Header file={uri} dimentions={dimentions} />
       <ImageView dimentions={dimentions} uri={uri} size={route.params?.size} />
 
       <BottomCardDimentions
+        rotateLeft={rotateLeft}
+        rotateRight={rotateRight}
         dimentions={dimentions}
         setDimentions={setDimentions}
-        resize={resize}
       />
       <BottomCardSlider
         sliderValue={sliderValue}
         setSliderValue={setSliderValue}
+        showCompress={showCompress}
       />
-    </Div>
+    </KeyboardAvoidingView>
   );
 };
-
-const BottomCardDimentions = ({ dimentions, setDimentions, resize }) => (
-  <Div p={10} rounded={"xl"} bg="blue200" mx={13} mb={5}>
-    <Div flexDir="row">
-      <Div flex={1}>
-        <Text textAlign="center" mb={4} fontWeight="600" color="blue700">
-          Width
-        </Text>
-        <Input
-          mx={6}
-          keyboardType="number-pad"
-          value={dimentions.width.toString()}
-          onChangeText={(e) =>
-            setDimentions((d) => ({ ...d, width: parseInt(e) || 0 }))
-          }
-        />
-      </Div>
-      <Div flex={1} mx={5}>
-        <Text textAlign="center" mb={4} fontWeight="600" color="blue700">
-          Height
-        </Text>
-        <Input
-          keyboardType="number-pad"
-          value={dimentions.height.toString()}
-          onChangeText={(e) =>
-            setDimentions((d) => ({ ...d, height: parseInt(e) || 0 }))
-          }
-        />
-      </Div>
-    </Div>
-    <Div justifyContent="center" alignItems="center" flexDir="row" mt={5}>
-      <Button>Left</Button>
-      <Button mx={10} onPress={resize}>
-        Resize
-      </Button>
-      <Button>Right</Button>
-    </Div>
-  </Div>
-);
-
-const BottomCardSlider = ({ setSliderValue, sliderValue }) => (
-  <Div p={10} rounded={"xl"} bg="blue200" mx={13} mb={50}>
-    <Div flexDir="row" alignItems="center" justifyContent="space-evenly">
-      <Text textAlign="center" fontSize={22} color="blue600" fontWeight="bold">
-        Compress
-      </Text>
-      <Div bg="blue800" p={15} rounded="circle">
-        <Text color="white" fontWeight="800" fontSize={20}>
-          {sliderValue}
-        </Text>
-      </Div>
-    </Div>
-    <Slider
-      value={50}
-      minimumValue={0}
-      maximumValue={100}
-      onValueChange={(v) => setSliderValue(parseInt(v))}
-    />
-  </Div>
-);
 
 const ImageView = ({ size, uri, dimentions }) => (
   <Div flex={1}>

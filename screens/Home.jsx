@@ -53,11 +53,13 @@ const HeaderTitle = () => (
     <Text
       fontWeight="500"
       color="blue600"
-      fontSize={33}
+      fontSize={35}
+      mx={50}
+      numberOfLines={2}
       mb={30}
       textAlign="center"
     >
-      Welcome Image Compress App!
+      Welcome Image Edit App!
     </Text>
     <Text mt={3} textAlign="center">
       Please check or capture an image...
